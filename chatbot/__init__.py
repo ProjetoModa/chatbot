@@ -10,6 +10,7 @@ class Chatbot:
             "turns": [],
             "slots": {},
             "liked": [],
+            "entropy": {},
             "page": "/",
         }
 
@@ -47,9 +48,10 @@ class Chatbot:
         self._log({"action": '/chat', "uuid": id, "data": {"state": state, "actions": actions}})
         return actions, state
     
-    def entropy(self, id):
+    def entropy(self, id, entropy):
         session = self._getSession(id)
         state = json.loads(session.description)
+        state['entropy'] = entropy
 
         actions, state = self.digai.entropy(state)
         session.description = json.dumps(state)

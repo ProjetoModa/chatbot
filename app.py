@@ -39,7 +39,8 @@ def create_app():
     @app.route('/entropy', methods=['POST'])
     def entropy():
         id = request.json.get('id')
-        actions, state = chatbot.entropy(id)
+        entropy = request.json.get('entropy')
+        actions, state = chatbot.entropy(id, entropy)
         return jsonify({"actions": actions, "state": state})
     
     @app.route('/like', methods=['POST'])
