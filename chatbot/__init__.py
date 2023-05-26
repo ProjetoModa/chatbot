@@ -1,0 +1,93 @@
+from models import db, Session, Logs
+from .digai import DigAI
+import json
+
+
+class Chatbot:
+    def __init__(self):
+        self.digai = DigAI()
+        self.defaultSession = {
+            "turns": [],
+            "slots": {},
+            "liked": [],
+            "page": "/",
+        }
+
+    def _log(self, data):
+        log = Logs(description=json.dumps(data))
+        db.session.add(log)
+        db.session.commit()
+
+    def _insertSession(self, uuid, state):
+        session = Session(uuid=id, state=json.dumps(state))
+        db.session.add(session)
+        db.session.commit()
+
+    def _updateSession(self, session):
+        db.session.add(session)
+        db.session.commit()
+
+    def _getSession(self, id):
+        session = Session.query.filter_by(uuid=id).first()
+        if not session:
+            self._insertSession(id, self.defaultSession)
+
+    def init(self, id):
+        self._log({"action": '/init', "uuid": id})
+        return self._getSession(id)
+
+    def chat(self, id, text):
+        session = self._getSession(id)
+        state = json.loads(session.description)
+
+        actions, state = self.digai.turn(state, text)
+        session.description = json.dumps(state)
+        self._updateSession(session)
+        
+        self._log({"action": '/chat', "uuid": id, "data": {"state": state, "actions": actions}})
+        return actions, state
+    
+    def entropy(self, id):
+        session = self._getSession(id)
+        state = json.loads(session.description)
+
+        actions, state = self.digai.entropy(state)
+        session.description = json.dumps(state)
+        self._updateSession(session)
+        
+        self._log({"action": '/entropy', "uuid": id, "data": {"state": state, "actions": actions}})
+        return actions, state
+
+    def like(self, id, product):
+        session = self._getSession(id)
+        state = json.loads(session.description)
+        if product not in state['liked']:
+            state['liked'].append(product)
+        session.description = json.dumps(state)
+        self._updateSession(session)
+
+        self._log({"action": '/like', "uuid": id, "data": {"state": state, "product": product}})
+        return state
+
+    def dislike(self, id, product):
+        session = self._getSession(id)
+        
+        state = json.loads(session.description)
+        if product in state['liked']:
+            state['liked'].remove(product)
+        session.description = json.dumps(state)
+        self._updateSession(session)
+        
+        self._log({"action": '/dislike', "uuid": id, "data": {"state": state, "product": product}})
+        return state
+
+    def finish(self, id):
+        session = self._getSession(id)
+        
+        state = json.loads(session.description)
+        state['page'] = '/end'
+        session.description = json.dumps(state)
+        self._updateSession(session)
+
+        self._log({"action": '/finish', "uuid": id})
+        return state
