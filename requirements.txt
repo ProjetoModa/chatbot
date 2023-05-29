@@ -4,4 +4,4 @@ Flask-SQLAlchemy
 mysql-connector-python
 python-dotenv
 pandas
-scikit-learn
+scikit-learn==1.2.2
