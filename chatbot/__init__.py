@@ -18,20 +18,24 @@ class Chatbot:
         log = Logs(description=json.dumps(data))
         db.session.add(log)
         db.session.commit()
+        return log
 
     def _insertSession(self, uuid, state):
-        session = Session(uuid=id, state=json.dumps(state))
+        session = Session(uuid=uuid, state=json.dumps(state))
         db.session.add(session)
         db.session.commit()
+        return session
 
     def _updateSession(self, session):
         db.session.add(session)
         db.session.commit()
+        return session
 
     def _getSession(self, id):
         session = Session.query.filter_by(uuid=id).first()
         if not session:
-            self._insertSession(id, self.defaultSession)
+            session = self._insertSession(id, self.defaultSession)
+        return session
 
     def init(self, id):
         self._log({"action": '/init', "uuid": id})
@@ -39,10 +43,10 @@ class Chatbot:
 
     def chat(self, id, text):
         session = self._getSession(id)
-        state = json.loads(session.description)
+        state = json.loads(session.state)
 
         actions, state = self.digai.turn(state, text)
-        session.description = json.dumps(state)
+        session.state = json.dumps(state)
         self._updateSession(session)
         
         self._log({"action": '/chat', "uuid": id, "data": {"state": state, "actions": actions}})
@@ -50,11 +54,11 @@ class Chatbot:
     
     def entropy(self, id, entropy):
         session = self._getSession(id)
-        state = json.loads(session.description)
+        state = json.loads(session.state)
         state['entropy'] = entropy
 
         actions, state = self.digai.entropy(state)
-        session.description = json.dumps(state)
+        session.state = json.dumps(state)
         self._updateSession(session)
         
         self._log({"action": '/entropy', "uuid": id, "data": {"state": state, "actions": actions}})
@@ -62,10 +66,10 @@ class Chatbot:
 
     def like(self, id, product):
         session = self._getSession(id)
-        state = json.loads(session.description)
+        state = json.loads(session.state)
         if product not in state['liked']:
             state['liked'].append(product)
-        session.description = json.dumps(state)
+        session.state = json.dumps(state)
         self._updateSession(session)
 
         self._log({"action": '/like', "uuid": id, "data": {"state": state, "product": product}})
@@ -74,10 +78,10 @@ class Chatbot:
     def dislike(self, id, product):
         session = self._getSession(id)
         
-        state = json.loads(session.description)
+        state = json.loads(session.state)
         if product in state['liked']:
             state['liked'].remove(product)
-        session.description = json.dumps(state)
+        session.state = json.dumps(state)
         self._updateSession(session)
         
         self._log({"action": '/dislike', "uuid": id, "data": {"state": state, "product": product}})
@@ -86,9 +90,9 @@ class Chatbot:
     def finish(self, id):
         session = self._getSession(id)
         
-        state = json.loads(session.description)
+        state = json.loads(session.state)
         state['page'] = '/end'
-        session.description = json.dumps(state)
+        session.state = json.dumps(state)
         self._updateSession(session)
 
         self._log({"action": '/finish', "uuid": id})
