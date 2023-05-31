@@ -1,6 +1,8 @@
 import numpy as np
 import time
 import random
+import requests
+import os
 
 
 class DialogPolicy:
@@ -64,14 +66,16 @@ class DialogPolicy:
                 {"action": "answer", "text": random.choice(self.intent_to_answer[intent])})
             actions.append(
                 {"action": "answer", "text": self.ask_can_assist})
-        else:
+        elif elapsed >= 30:
             shouldRecommend = True
 
-        if elapsed >= 30 or shouldRecommend:
+        if shouldRecommend:
             actions.append({"action": "recommend"})
             actions.append(
                 {"action": "answer", "text": random.choice(self.recommend_text)})
-            actions.append({"action": "entropy"})
+            entropyResponse = requests.post(os.getenv('RECOMM_API')+"/entropy", json={"state": state})
+            if entropyResponse.ok:
+                actions.extend(self.entropy(state, entropyResponse.json()['entropy']))
         return actions
 
     def answer(self, state, text, intent, entities):
@@ -90,23 +94,18 @@ class DialogPolicy:
             {"self": False, "time": time.time(), "data": actions})
         return actions, state
 
-    def entropy(self, state):
+    def entropy(self, state, entropy):
         actions = []
         entities = [s for s in state['slots'] if not state['slots'][s]]
         if len(entities):
             max_entropy = 0
             entity = None
             for e in entities:
-                if not e in ["item", "with_item"] and state['entropy'][e] > max_entropy:
-                    max_entropy = state['entropy'][e]
+                if e in entropy and entropy[e] > max_entropy:
+                    max_entropy = entropy[e]
                     entity = e
-            if entity:
-                text = random.choice([
-                    "What is your preference about {}?",
-                    "What do you think about the skirt {}?",
-                    "Do you have any preference about {}?",
-                    "What {} do you like?"
-                ])
+            if max_entropy > 0 and entity:
+                text = random.choice(self.entropy_text)
                 actions.append(
                     {"action": "answer", "text": text.format(entity)})
-        return actions, state
+        return actions

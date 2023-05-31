@@ -26,21 +26,19 @@ def create_app():
     @app.route('/init', methods=['POST'])
     def init():
         id = request.json.get('id')
-        utterance = request.json.get('utterance')
-        return jsonify({"state": chatbot.chat(id, utterance)})
+        return jsonify({"state": chatbot.init(id)})
+    
+    @app.route('/navigate', methods=['POST'])
+    def navigate():
+        id = request.json.get('id')
+        page = request.json.get('page')
+        return jsonify({"state": chatbot.navigate(id, page)})
     
     @app.route('/chat', methods=['POST'])
     def chat():
         id = request.json.get('id')
         utterance = request.json.get('utterance')
         actions, state = chatbot.chat(id, utterance)
-        return jsonify({"actions": actions, "state": state})
-    
-    @app.route('/entropy', methods=['POST'])
-    def entropy():
-        id = request.json.get('id')
-        entropy = request.json.get('entropy')
-        actions, state = chatbot.entropy(id, entropy)
         return jsonify({"actions": actions, "state": state})
     
     @app.route('/like', methods=['POST'])

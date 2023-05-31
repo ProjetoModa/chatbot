@@ -39,7 +39,18 @@ class Chatbot:
 
     def init(self, id):
         self._log({"action": '/init', "uuid": id})
-        return self._getSession(id)
+        return self._getSession(id).state
+
+    def navigate(self, id, page):
+        self._log({"action": '/navigate', "uuid": id, "data": {"page": page}})
+        session = self._getSession(id)
+        state = json.loads(session.state)
+        
+        state['page'] = page
+        session.state = json.dumps(state)
+        self._updateSession(session)
+        
+        return session.state
 
     def chat(self, id, text):
         session = self._getSession(id)
@@ -48,10 +59,11 @@ class Chatbot:
         actions, state = self.digai.turn(state, text)
         session.state = json.dumps(state)
         self._updateSession(session)
-        
-        self._log({"action": '/chat', "uuid": id, "data": {"state": state, "actions": actions}})
+
+        self._log({"action": '/chat', "uuid": id,
+                  "data": {"state": state, "actions": actions}})
         return actions, state
-    
+
     def entropy(self, id, entropy):
         session = self._getSession(id)
         state = json.loads(session.state)
@@ -60,8 +72,9 @@ class Chatbot:
         actions, state = self.digai.entropy(state)
         session.state = json.dumps(state)
         self._updateSession(session)
-        
-        self._log({"action": '/entropy', "uuid": id, "data": {"state": state, "actions": actions}})
+
+        self._log({"action": '/entropy', "uuid": id,
+                  "data": {"state": state, "actions": actions}})
         return actions, state
 
     def like(self, id, product):
@@ -72,24 +85,26 @@ class Chatbot:
         session.state = json.dumps(state)
         self._updateSession(session)
 
-        self._log({"action": '/like', "uuid": id, "data": {"state": state, "product": product}})
+        self._log({"action": '/like', "uuid": id,
+                  "data": {"state": state, "product": product}})
         return state
 
     def dislike(self, id, product):
         session = self._getSession(id)
-        
+
         state = json.loads(session.state)
         if product in state['liked']:
             state['liked'].remove(product)
         session.state = json.dumps(state)
         self._updateSession(session)
-        
-        self._log({"action": '/dislike', "uuid": id, "data": {"state": state, "product": product}})
+
+        self._log({"action": '/dislike', "uuid": id,
+                  "data": {"state": state, "product": product}})
         return state
 
     def finish(self, id):
         session = self._getSession(id)
-        
+
         state = json.loads(session.state)
         state['page'] = '/end'
         session.state = json.dumps(state)
