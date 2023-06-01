@@ -92,7 +92,12 @@ class Chatbot:
         session = self._getSession(id)
 
         state = json.loads(session.state)
-        state['page'] = '/end'
+        if state['page'] == "/part-a":
+            state['page'] = '/inter-ab'
+        elif state['page'] == "/part-b":
+            state['page'] = '/inter-bc'
+        elif state['page'] == "/part-c":
+            state['page'] = '/end'
         session.state = json.dumps(state)
         self._updateSession(session)
 
