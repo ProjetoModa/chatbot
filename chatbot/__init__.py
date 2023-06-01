@@ -10,7 +10,6 @@ class Chatbot:
             "turns": [],
             "slots": {},
             "liked": [],
-            "entropy": {},
             "page": "/",
         }
 
@@ -61,19 +60,6 @@ class Chatbot:
         self._updateSession(session)
 
         self._log({"action": '/chat', "uuid": id,
-                  "data": {"state": state, "actions": actions}})
-        return actions, state
-
-    def entropy(self, id, entropy):
-        session = self._getSession(id)
-        state = json.loads(session.state)
-        state['entropy'] = entropy
-
-        actions, state = self.digai.entropy(state)
-        session.state = json.dumps(state)
-        self._updateSession(session)
-
-        self._log({"action": '/entropy', "uuid": id,
                   "data": {"state": state, "actions": actions}})
         return actions, state
 
