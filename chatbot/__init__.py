@@ -1,4 +1,4 @@
-from models import db, Session, Logs
+from models import db, Session, Logs, Answers
 from .digai import DigAI
 import json
 
@@ -95,7 +95,7 @@ class Chatbot:
         if state['page'] == "/part-a":
             state['page'] = '/inter-ab'
         elif state['page'] == "/part-b":
-            state['page'] = '/inter-bc'
+            state['page'] = '/questions'
         elif state['page'] == "/part-c":
             state['page'] = '/end'
         session.state = json.dumps(state)
@@ -103,3 +103,15 @@ class Chatbot:
 
         self._log({"action": '/finish', "uuid": id})
         return state
+    
+    def questionnaire(self, id, data, complete):
+        answers = Answers.query.filter_by(uuid=id).first()
+        if not answers:
+            answers = Answers(uuid=id)
+        answers.data = json.dumps(data)
+        answers.complete = complete
+        db.session.add(answers)
+        db.session.commit()
+        
+        self._log({"action": '/questionnaire', "uuid": id,
+                  "data": {"data": data, "complete": complete}})
