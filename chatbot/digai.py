@@ -12,8 +12,7 @@ class DigAI:
     def turn(self, state, text):
         intent = self.intent.predict(text)
         entities = self.entity.extract(text)
-        actions = self.policy.answer(state, text, intent, entities)
-        return actions
+        return self.policy.answer(state, text, intent, entities)
 
     def entropy(self, state):
         return self.policy.entropy(state)
