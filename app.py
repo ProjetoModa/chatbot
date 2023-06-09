@@ -28,6 +28,13 @@ def create_app():
         id = request.json.get('id')
         return jsonify({"state": chatbot.init(id)})
     
+    @app.route('/log', methods=['POST'])
+    def log():
+        id = request.json.get('id')
+        data = request.json.get('data')
+        chatbot.log(id, data)
+        return jsonify({"msg": "ok"})
+    
     @app.route('/navigate', methods=['POST'])
     def navigate():
         id = request.json.get('id')

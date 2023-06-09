@@ -40,6 +40,9 @@ class Chatbot:
         self._log({"action": '/init', "uuid": id})
         return self._getSession(id).state
 
+    def log(self, id, data):
+        self._log({"action": '/log', "uuid": id, "data": data})
+
     def navigate(self, id, page):
         self._log({"action": '/navigate', "uuid": id, "data": {"page": page}})
         session = self._getSession(id)
