@@ -54,7 +54,7 @@ class DialogPolicy:
         }
         self.ask_can_assist = "I can assist you in filtering the catalog based on your preferences. Please provide me with the specific fabric, pattern, size, color, or type you are looking for, and I will help narrow down the options to match your requirements. Feel free to let me know your preferences, and I'll do my best to find the perfect match for you."
         self.recommend_text = [
-            "Perhaps you'd like one of these?", "What do you think about one of these?"]
+            "Perhaps you'd like these?", "What do you think about these?"]
         self.entropy_text = ["What is your preference about {}?",
                              "What do you think about the skirt {}?",
                              "Do you have any preference about {}?",
