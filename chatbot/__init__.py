@@ -1,5 +1,6 @@
 from models import db, Session, Logs, Answers
 from .digai import DigAI
+from googletrans import Translator
 import json
 
 
@@ -12,6 +13,7 @@ class Chatbot:
             "liked": [],
             "page": "/",
         }
+        self.t = Translator()
 
     def _log(self, data):
         log = Logs(description=json.dumps(data))
@@ -47,16 +49,21 @@ class Chatbot:
         self._log({"action": '/navigate', "uuid": id, "data": {"page": page}})
         session = self._getSession(id)
         state = json.loads(session.state)
-        
+
         state['page'] = page
         session.state = json.dumps(state)
         self._updateSession(session)
-        
+
         return session.state
 
-    def chat(self, id, text):
+    def chat(self, id, text, lang):
         session = self._getSession(id)
         state = json.loads(session.state)
+
+        if lang != "en":
+            translated = self.t.translate(text, dest='en')
+            self._log({"action": "/translate", "uuid": id, "data": {"from": text, "to": translated.text}})
+            text = translated.text
 
         actions, state = self.digai.turn(state, text)
         session.state = json.dumps(state)
@@ -64,6 +71,15 @@ class Chatbot:
 
         self._log({"action": '/chat', "uuid": id,
                   "data": {"state": state, "actions": actions}})
+        
+        if lang != "en":
+            for i in range(len(actions)):
+                if actions[i]['action'] == "answer":
+                    translated = self.t.translate(actions[i]['text'], dest=lang)
+                    self._log({"action": "/translateAnswer", "uuid": id, "data": {"from": actions[i]['text'], "to": translated.text}})
+                    actions[i]['text'] = translated.text
+                    
+        
         return actions, state
 
     def like(self, id, product):
@@ -106,7 +122,7 @@ class Chatbot:
 
         self._log({"action": '/finish', "uuid": id})
         return state
-    
+
     def questionnaire(self, id, data, complete):
         answers = Answers.query.filter_by(uuid=id).first()
         if not answers:
@@ -115,6 +131,6 @@ class Chatbot:
         answers.complete = complete
         db.session.add(answers)
         db.session.commit()
-        
+
         self._log({"action": '/questionnaire', "uuid": id,
                   "data": {"data": data, "complete": complete}})

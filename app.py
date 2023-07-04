@@ -45,7 +45,8 @@ def create_app():
     def chat():
         id = request.json.get('id')
         utterance = request.json.get('utterance')
-        actions, state = chatbot.chat(id, utterance)
+        lang = request.json.get('lang')
+        actions, state = chatbot.chat(id, utterance, lang)
         return jsonify({"actions": actions, "state": state})
     
     @app.route('/like', methods=['POST'])
