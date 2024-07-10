@@ -38,8 +38,8 @@ class Chatbot:
             session = self._insertSession(id, self.defaultSession)
         return session
 
-    def init(self, id):
-        self._log({"action": '/init', "uuid": id})
+    def init(self, id, prolific):
+        self._log({"action": '/init', "uuid": id, "prolific": prolific})
         return self._getSession(id).state
 
     def log(self, id, data):
