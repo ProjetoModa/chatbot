@@ -26,8 +26,8 @@ def create_app():
     @app.route('/init', methods=['POST'])
     def init():
         id = request.json.get('id')
-        prolific = request.json.get('prolific')
-        return jsonify({"state": chatbot.init(id)})
+        prolific = request.json.get('id')
+        return jsonify({"state": chatbot.init(id, prolific)})
     
     @app.route('/log', methods=['POST'])
     def log():
